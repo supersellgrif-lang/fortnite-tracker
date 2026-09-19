@@ -17,34 +17,34 @@ headers = {
 sent_events = set()
 
 def get_events():
-    # Χρήση του έγκυρου API για Fortnite Events
-    url = "https://fortnite-api.com/v2/news/br" # Ή το κατάλληλο endpoint της επιλογής σου
+    # Έγκυρο API endpoint για τα νέα / events του Fortnite
+    url = "https://fortnite-api.com/v2/news/br"
     
-    # Μηχανισμός Retries σε περίπτωση timeout ή δικτυακού σφάλματος
     for attempt in range(3):
         try:
             response = requests.get(url, headers=headers, timeout=15)
             if response.status_code == 200:
                 data = response.json()
                 if isinstance(data, dict):
-                    return data.get("data", []) or data.get("events", [])
+                    # Επιστρέφει τη λίστα με τα events/news
+                    return data.get("data", {}).get("motds", []) or data.get("data", [])
                 return data if isinstance(data, list) else []
             else:
-                print(f"⚠️ HTTP Error {response.status_code}. Retry {attempt + 1}/3...")
+                print(f"⚠️ HTTP Error {response.status_code}. Retry {attempt + 1}/3...", flush=True)
         except requests.exceptions.RequestException as e:
-            print(f"⚠️ Network error (attempt {attempt + 1}/3): {e}")
+            print(f"⚠️ Network error (attempt {attempt + 1}/3): {e}", flush=True)
         
-        time.sleep(5)  # Αναμονή 5 δευτερολέπτων πριν την επόμενη προσπάθεια
+        time.sleep(5)  # Αναμονή 5 δευτερολέπτων πριν τη νέα προσπάθεια
         
     return []
 
 def is_skin_cup(event):
-    name = str(event.get("name", "") or event.get("displayName", "") or event.get("title", "")).lower()
+    name = str(event.get("name", "") or event.get("displayName", "") or event.get("title", "") or event.get("tabTitle", "")).lower()
     keywords = ["skin", "icon", "cup", "override", "champion", "focus", "collab", "edgerunners", "ironmouse", "lucy"]
     return any(keyword in name for keyword in keywords)
 
 def send_to_discord(event):
-    name = event.get("name") or event.get("displayName") or event.get("title") or "Unknown Skin Cup"
+    name = event.get("name") or event.get("displayName") or event.get("title") or event.get("tabTitle") or "Unknown Skin Cup"
     
     embed = {
         "title": f"🏆 New Skin Cup Detected: {name}",
@@ -71,16 +71,18 @@ def send_to_discord(event):
 
     try:
         requests.post(DISCORD_WEBHOOK, json=payload, timeout=10)
-        print(f"✅ Sent notification: {name}")
+        print(f"✅ Sent notification: {name}", flush=True)
     except Exception as e:
-        print(f"Discord error: {e}")
+        print(f"Discord error: {e}", flush=True)
 
 def main():
-    print("🚀 Skin Cup Tracker started (EU - English)")
-    print(f"Checking every {CHECK_INTERVAL // 60} minutes...")
+    print("🚀 Skin Cup Tracker started (EU - English)", flush=True)
+    print(f"Checking every {CHECK_INTERVAL // 60} minutes...", flush=True)
     
     while True:
+        print(f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] Checking for events...", flush=True)
         events = get_events()
+        
         for event in events:
             event_id = str(event.get("eventId") or event.get("id") or event.get("name") or id(event))
             
@@ -88,6 +90,7 @@ def main():
                 send_to_discord(event)
                 sent_events.add(event_id)
         
+        print(f"Waiting for {CHECK_INTERVAL // 60} minutes...", flush=True)
         time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
