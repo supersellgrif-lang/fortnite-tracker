@@ -6,26 +6,36 @@ from datetime import datetime
 DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1550957260149235735/sJcwpn47D0dEd87IP7ELHEsAvTZRiD6tBt8Cw_fFtZmHiTTYhaRVNE6zSI1Tnv-pbPul"
 API_KEY = "bd2c3863-2feb-489e-b732-5019fc13903f"
 REGION = "EU"
-CHECK_INTERVAL = 3600   # κάθε 1 ώρα (λιγότερα requests = λιγότερα timeout)   # Ελέγχει κάθε 30 λεπτά (σε δευτερόλεπτα)
+CHECK_INTERVAL = 3600   # Ελέγχει κάθε 1 ώρα (σε δευτερόλεπτα)
 # =======================================================
 
 headers = {
-    "x-api-key": API_KEY
+    "x-api-key": API_KEY,
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 }
 
 sent_events = set()
 
 def get_events():
-    url = "https://prod.api-fortnite.com/api/v1/events/global"
-    try:
-        response = requests.get(url, headers=headers, timeout=30)
-        if response.status_code == 200:
-            data = response.json()
-            if isinstance(data, dict):
-                return data.get("events", []) or data.get("data", []) or []
-            return data if isinstance(data, list) else []
-    except Exception as e:
-        print(f"Error fetching events: {e}")
+    # Χρήση του έγκυρου API για Fortnite Events
+    url = "https://fortnite-api.com/v2/news/br" # Ή το κατάλληλο endpoint της επιλογής σου
+    
+    # Μηχανισμός Retries σε περίπτωση timeout ή δικτυακού σφάλματος
+    for attempt in range(3):
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, dict):
+                    return data.get("data", []) or data.get("events", [])
+                return data if isinstance(data, list) else []
+            else:
+                print(f"⚠️ HTTP Error {response.status_code}. Retry {attempt + 1}/3...")
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Network error (attempt {attempt + 1}/3): {e}")
+        
+        time.sleep(5)  # Αναμονή 5 δευτερολέπτων πριν την επόμενη προσπάθεια
+        
     return []
 
 def is_skin_cup(event):
@@ -82,3 +92,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
