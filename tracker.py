@@ -6,7 +6,7 @@ from datetime import datetime
 DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1550957260149235735/sJcwpn47D0dEd87IP7ELHEsAvTZRiD6tBt8Cw_fFtZmHiTTYhaRVNE6zSI1Tnv-pbPul"
 API_KEY = "bd2c3863-2feb-489e-b732-5019fc13903f"
 REGION = "EU"
-CHECK_INTERVAL = 1800   # Ελέγχει κάθε 30 λεπτά (σε δευτερόλεπτα)
+CHECK_INTERVAL = 3600   # κάθε 1 ώρα (λιγότερα requests = λιγότερα timeout)   # Ελέγχει κάθε 30 λεπτά (σε δευτερόλεπτα)
 # =======================================================
 
 headers = {
