@@ -18,7 +18,7 @@ sent_events = set()
 def get_events():
     url = "https://prod.api-fortnite.com/api/v1/events/global"
     try:
-        response = requests.get(url, headers=headers, timeout=15)
+        response = requests.get(url, headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, dict):
